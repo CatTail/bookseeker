@@ -10,6 +10,78 @@
 		});
 	}
 
+
+	var bookseeker = {
+		name : '站外图书检索',
+		css : 'bookseeker',
+		sites : [
+			{
+				name : '新浪爱问',
+				css : 'iask',
+				types : [
+					{name:'全部',key:'',css:'all'},
+					{name:'TXT',key:'txt',css:'txt'},
+					{name:'DOC',key:'doc',css:'doc'},
+					{name:'PDF',key:'pdf',css:'pdf'},
+					{name:'PPT',key:'ppt',css:'ppt'},
+					{name:'HTM',key:'htm',css:'htm'},
+					{name:'RAR',key:'rar',css:'rar'},
+					{name:'EXE',key:'exe',css:'exe'},
+				],
+			},
+			{
+				name : '百度文库',
+				css : 'wenku',
+				types : [
+					{name:'全部',key:'0',css:'all'},
+					{name:'DOC',key:'1',css:'doc'},
+					{name:'PDF',key:'2',css:'pdf'},
+					{name:'PPT',key:'3',css:'ppt'},
+					{name:'XLS',key:'4',css:'xls'},
+					{name:'TXT',key:'5',css:'txt'},
+				],
+			},
+
+		],
+	};
+
+	//DOM template
+	var ul_classify = $('<ul style="margin-bottom:10px;"></ul>');
+	var ul_resource = $('<ul></ul>').addClass('bs');
+	var li_str = '<li class="{0}" onclick="change{1}(\'{2}\')" style="display:inline;margin-right:10px;"><a>{3}</a></li>';
+	var clearfix = $('<div style="clear:both;"></div>');
+
+	var css = bookseeker.css;
+	var div = $('<div></div>').addClass('gray_ad').append( $('<h2></h2>').html(bookseeker.name) );
+	var ul = ul_classify.clone();
+	$('.aside').prepend( div.append( ul ) );
+
+	bookseeker.sites.forEach(function(site){
+		var css_site = [ [css,'site'].join('-'),site.css ].join(' ');
+		//create site <li>
+		ul.append( $(li_str.format( css_site,'Site',site.css,site.name )) );
+
+		var div_site = $('<div></div>').addClass(css_site);
+		var ul_site = ul_classify.clone();
+		div.append( div_site.append( ul ) );
+
+		//create type
+		site.types.forEach(function(type){
+			var css_type = [ [css_site,'type'].join('-'),type.css ].join(' ');
+			//create type <li>
+			ul_site.append( $(li_str.format( css_type,'Type',type.css,type.name )) );
+
+			var div_type = $('<div></div>').addClass(css_type);
+			var ul_type = ul_classify.clone();
+			div_site.append( div_type.append( ul_site ) );
+		});
+
+	});
+
+
+	
+
+	/*
 	//book name
 	var key = $('html head title').html().split(' ')[0];
 	//add resource div in aside
@@ -287,4 +359,5 @@
 	}
 
 	contentEval( changeTypeIask );
+	*/
 })(window);
