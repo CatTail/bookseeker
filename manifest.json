@@ -1,0 +1,35 @@
+{
+  "name" : "douban-book",
+  "version" : "2.0",
+  "description" : "get book resource in other site",
+  "background" : {
+    "scripts": ["background.js"]
+  },
+  "page_action" :
+  {
+    "default_icon" : "douban-iask.png",
+    "default_title" : "douban-iask"
+  },
+  "content_scripts" : [
+    {
+      "matches" : [
+        "http://book.douban.com/subject/*"
+      ],
+      "js" : ["jquery.js","inject.js"],
+      "run_at" : "document_idle",
+      "all_frames" : false
+    }
+  ],
+  "permissions" : [
+	  "tabs",
+	  "http://api.iask.sina.com.cn/",
+	  "http://www.baidu.com/",
+	  "http://wenku.baidu.com/"
+  ],
+  "icons": {
+	  "16": "icon.png",
+	  "48": "icon.png",
+	  "128": "icon.png" 
+  },
+  "manifest_version": 2
+}
