@@ -1,4 +1,4 @@
-(function(){
+$(document).ready(function(){
 	//String format function
 	//just like c printf method , more likely in c# string format function
 	String.prototype.format = function()
@@ -23,7 +23,7 @@
 
 
 	var bookseeker;
-	var storage = chrome.storage.sync;
+	var storage = chrome.storage.local;
 	storage.get(null,function(items){
 		defaultSite = items.defaultSite || 'iask';
 		maxNum = items.maxNum || 5;
@@ -256,5 +256,4 @@
 		script.textContent = source;
 		document.body.appendChild(script);
 	}
-
-})(window);
+});

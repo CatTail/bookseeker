@@ -2,10 +2,10 @@ window.onload = function(){
 	var sites = document.querySelectorAll('input[name=defaultSite]');
 	var max = document.querySelector('input[name=maxNum]');
 	//init input
-	var storage = chrome.storage.sync;
+	var storage = chrome.storage.local;
 	storage.get(null,function(items){
 		var tmp = document.querySelector('input[value='+items.defaultSite+']');
-		tmp !== undefined ? (tmp.checked = true) : (sites[0].checked=true);
+		tmp != undefined ? (tmp.checked = true) : (sites[0].checked=true);
 
 		max.value = items.maxNum || 5;
 	});
