@@ -1,7 +1,7 @@
 {
-  "name" : "douban-book",
-  "version" : "2.0",
-  "description" : "get book resource in other site",
+  "name" : "豆瓣书虫",
+  "version" : "2.2",
+  "description" : "豆瓣读书资源小爬虫",
   "background" : {
     "scripts": ["background.js"]
   },
@@ -20,16 +20,17 @@
       "all_frames" : false
     }
   ],
+  "options_page" : "view/options.html",
   "permissions" : [
 	  "tabs",
-	  "http://api.iask.sina.com.cn/",
-	  "http://www.baidu.com/",
-	  "http://wenku.baidu.com/"
+	  "storage",
+	  "http://*/*",
+	  "https://*/*"
   ],
   "icons": {
 	  "16": "icon.png",
 	  "48": "icon.png",
 	  "128": "icon.png" 
   },
-  "manifest_version": 2
+  "manifest_version": 3
 }
