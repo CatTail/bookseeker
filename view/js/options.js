@@ -21,4 +21,11 @@ window.onload = function(){
 			storage.get(null,function(items){console.log(items);});
 		});
 	};
+
+	//self definition page preview
+	document.querySelector('#preview').onclick = function(){
+		var windowref = window.open(document.querySelector('input[name=preview]').value);
+		debugger;
+	};
+
 };

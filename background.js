@@ -10,3 +10,8 @@ function checkForValidUrl(tabId, changeInfo, tab) {
 
 // Listen for any changes to the URL of any tab.
 chrome.tabs.onUpdated.addListener(checkForValidUrl);
+
+//click pation action will open options page
+chrome.pageAction.onClicked.addListener(function(tab){
+	window.open('/view/options.html');
+});
