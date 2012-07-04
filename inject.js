@@ -10,10 +10,28 @@
 		});
 	}
 
+	//capitalize string's first letter
+	String.prototype.capitalize = function(){
+		return this.charAt(0).toUpperCase() + this.slice(1);
+	}
+	//short cut string
+	String.prototype.shortcut = function(len,end){
+		len = len === undefined ? 10 : len;
+		end = end === undefined ? '...' : end;
+		return this.length >= len ? this.slice(0,len) + end : this;
+	}
+
 
 	var bookseeker = {
 		name : '站外图书检索',
 		css : 'bookseeker',
+		ul_template : '<ul style="margin-bottom:10px;"></ul>',
+		li_template : '<li class="{0}" onclick="change{1}({2})" style="display:inline;margin-right:10px;"><a>{3}</a></li>',
+		showNum : 5,
+		defaultShow : {
+			site : 'iask',
+			type : 'all',//comresponding to type's css
+		},
 		sites : [
 			{
 				name : '新浪爱问',
@@ -28,6 +46,7 @@
 					{name:'RAR',key:'rar',css:'rar'},
 					{name:'EXE',key:'exe',css:'exe'},
 				],
+				getResource : getIask,
 			},
 			{
 				name : '百度文库',
@@ -40,230 +59,150 @@
 					{name:'XLS',key:'4',css:'xls'},
 					{name:'TXT',key:'5',css:'txt'},
 				],
+				getResource : getWenku,
 			},
 
 		],
 	};
 
-	//DOM template
-	var ul_classify = $('<ul style="margin-bottom:10px;"></ul>');
-	var ul_resource = $('<ul></ul>').addClass('bs');
-	var li_str = '<li class="{0}" onclick="change{1}(\'{2}\')" style="display:inline;margin-right:10px;"><a>{3}</a></li>';
-	var clearfix = $('<div style="clear:both;"></div>');
 
 	var css = bookseeker.css;
 	var div = $('<div></div>').addClass('gray_ad').append( $('<h2></h2>').html(bookseeker.name) );
-	var ul = ul_classify.clone();
+	var ul = $(bookseeker.ul_template);
 	$('.aside').prepend( div.append( ul ) );
 
 	bookseeker.sites.forEach(function(site){
-		var css_site = [ [css,'site'].join('-'),site.css ].join(' ');
+		//site specific css class
+		var css_site = [ css,site.css ].join(' ');
 		//create site <li>
-		ul.append( $(li_str.format( css_site,'Site',site.css,site.name )) );
+		ul.append( $(bookseeker.li_template.format( css_site,'Site',"'"+site.css+"'",site.name )) );
 
-		var div_site = $('<div></div>').addClass(css_site);
-		var ul_site = ul_classify.clone();
-		div.append( div_site.append( ul ) );
+		var div_site = $('<div></div>').addClass(css_site).css('display','none');
+		var ul_site = $(bookseeker.ul_template);
+		div.append( div_site.append( ul_site ) );
 
 		//create type
 		site.types.forEach(function(type){
-			var css_type = [ [css_site,'type'].join('-'),type.css ].join(' ');
+			//type specific css class
+			var css_type = [ css_site.replace(' ','-'),type.css].join(' ');
 			//create type <li>
-			ul_site.append( $(li_str.format( css_type,'Type',type.css,type.name )) );
+			ul_site.append(
+				$(bookseeker.li_template.format(
+					css_type,'Type',"'"+site.css+"'"+","+"'"+type.css+"'",type.name
+				))
+			);
 
-			var div_type = $('<div></div>').addClass(css_type);
-			var ul_type = ul_classify.clone();
-			div_site.append( div_type.append( ul_site ) );
+			var div_type = $('<div></div>').addClass(css_type).css('display','none');
+			div_site.append( div_type );
+
+			//get resource list
+			site.getResource( type,div_type );
 		});
 
 	});
 
+	//get resoure list
+	//return 
+	function getIask(type,div){
+		var key = $('html head title').html().split('(')[0];
+		//DOM string
+		var ul = $('<ul class="bs"></ul>');
+		var li_str = '<li><a href="{0}" target="_blank" title="{1}">{2}</a><span style="float:right;">{3}</span></li>';
+		var more_str = '<div style="float:right;margin-top:10px;"><a href="http://api.iask.sina.com.cn/api/search2.php?key={0}&from=douban&format={1}" target="_blank">更多</a></div><div style="clear:both;"></div>';
+		//urls
+		var search = 'http://api.iask.sina.com.cn/api/isharesearch.php?key={0}&format={1}&start=0&num={2}&datatype=json&keycharset=utf8';
 
-	
-
-	/*
-	//book name
-	var key = $('html head title').html().split(' ')[0];
-	//add resource div in aside
-	var douban_book = $('<div id="douban-book" class="gray_ad"><h2>站外资料检索<a href="mailto:cattail2012@gmail.com" target="_blank">(By CatTail)</a></h2></div>');
-	var ul_template = $('<ul style="margin-bottom:10px;"></ul>');
-
-	//site classify
-	(function(){
-		var ul = ul_template.clone();
-		var SITES = [
-			{name:'百度文库',cssClass:'bdwenku'},
-			{name:'新浪爱问',cssClass:'iask'},
-		];
-		SITES.forEach(function(site,index){
-			ul.append(
-				$('<li class="douban-book-site-type {0}" onclick="changeSite(\'{1}\')" style="display:inline;margin-right:10px;"><a>{2}</a></li>'.format(
-					site.cssClass,site.cssClass,site.name
-				))
-			);
-		});
-		douban_book.append( ul );
-		$('.aside').prepend( douban_book );
-
-
-	})();
-
-	//wenku.baidu.com
-	(function(){
-		var douban_book_bdwenku = $('<div class="douban-book-site bdwenku" style="display:none;"></div>');
-		douban_book.append( douban_book_bdwenku );
-
-		//file type
-		var TYPES = [
-			{name:'全部',value:'0',cssClass:'all'},
-			{name:'DOC',value:'1',cssClass:'doc'},
-			{name:'PDF',value:'2',cssClass:'pdf'},
-			{name:'PPT',value:'3',cssClass:'ppt'},
-			{name:'XLS',value:'4',cssClass:'xls'},
-			{name:'TXT',value:'5',cssClass:'txt'},
-		];
-
-		//generate type info
-		var ul = ul_template.clone();
-		TYPES.forEach(function(type){
-			ul.append( $('<li class="douban-book-bdwenku-type {0}" style="display:inline;margin-right:10px;"><a onclick="changeTypeBDWenku(\'{1}\')">{2}</a></li>'.format(type.cssClass,type.cssClass,type.name)) );
-		});
-		douban_book_bdwenku.append( ul );
-
-		//get badiu wenku resource lists
-		TYPES.forEach(function(type){
-			getBDWenku(key,type,function(div){
-				douban_book_bdwenku.append( div );
-				if( type.cssClass === 'all' ){
-					changeTypeBDWenku(type.cssClass);
-					//show default site wenku.baidu.com
-					changeSite('bdwenku');
-				}
-			});
-		});
-
-		//get baidu wenku resource list
-		function getBDWenku(key,type,callback){
-			var div = $('<div class="douban-book-bdwenku-list {0}" style="display:none;"></div>'.format(type.cssClass) );
-			var ul = $('<ul class="bs"></ul>');
-			div.append( ul );
-			var li_str = '<li><a href="{0}" target="_blank" title="{1}">{2}</a><span style="float:right;">{4}</span><span style="margin-right:50px;float:right">{3}</span></li>';
-			var more_str = '<div style="float:right;margin-top:10px;"><a href="{0}" target="_blank">更多</a></div><div style="clear:both;"></div>';
-
-			var word = key === undefined ? '' : key;//keyword
-			var lm = type === undefined ? '' : type.value;//file type
-			urlencode(word,function(word){
-				var search = "http://wenku.baidu.com/search?word={0}&lm={1}&od={2}&pn={3}".format(word,lm,0,0);
-
-				$.ajax({
-					url : search,
-					success : function(data){
-						var lis = '';
-						$('.search-result dl',data).each(function(index,item){
-							var name = $('dt a',item).text();
-							name.length >= 10 ? name = name.slice(0,9) + '...' : 0;
-							var url = $('dt a',item).attr('href');
-							var desc = $('dd p.summary',item).text();
-							var score = $('dd p.detail span',item).attr('title').match(/\d+/)[0] + '分';
-							var date = $('dt span',item).text();
-							lis += li_str.format(url,desc,name,score,date);
-						});
-						ul.append( $(lis) );
-						//insert more link
-						div.append( $(more_str.format(search)) );
-						callback === undefined ? 0 : callback( div );
-					},
+		//get book list
+		$.ajax({
+			url : search.format(key,type.key,bookseeker.showNum),
+			success : function(data){
+				data = eval(data);
+				data.sp.result.forEach(function(element,index){
+					//insert resource list
+					var title , desc , url , size;
+					title = element.title.shortcut(20);
+					desc = element.desc;
+					url = element.url;
+					size = calSize(element.filesize);
+					ul.append( $( li_str.format(url,desc,title,size) ) );
 				});
-			})
-		}
-
-	})();
-
-
-	//iask.sina.com.cn
-	(function(){
-		var douban_book_iask = $('<div class="douban-book-site iask" style="display:none;"></div>');
-		douban_book.append( douban_book_iask );
-
-
-		//add type list
-		var ul = ul_template.clone();
-		var TYPES= [
-			{name:'全部',value:'',cssClass:'all'},
-			{name:'TXT',value:'txt',cssClass:'txt'},
-			{name:'DOC',value:'doc',cssClass:'doc'},
-			{name:'PDF',value:'pdf',cssClass:'pdf'},
-			{name:'PPT',value:'ppt',cssClass:'ppt'},
-			{name:'HTM',value:'htm',cssClass:'htm'},
-			{name:'RAR',value:'rar',cssClass:'rar'},
-			{name:'EXE',value:'exe',cssClass:'exe'},
-		];
-
-		//add resource lists
-		TYPES.forEach(function(obj,index){
-			ul.append(
-				$('<li class="douban-book-iask-type {0}" style="display:inline;margin-right:10px;"><a onclick="changeTypeIask(\'{1}\')">{2}</a></li>'.format(
-					obj.cssClass,obj.cssClass,obj.name
-				))
-			);
+				//insert more
+				div.append( ul , $(more_str.format(key,type.key)) );
+			},
 		});
-		douban_book_iask.append( ul );
+	}
 
-		TYPES.forEach(function(element,index){
-			getIask(key,element,function(div){
-				douban_book_iask.append( div );
+	function getWenku(type,div){
+		var ul = $('<ul class="bs"></ul>');
+		var li_str = '<li><a href="{0}" target="_blank" title="{1}">{2}</a><span style="float:right;">{4}</span><span style="margin-right:50px;float:right">{3}</span></li>';
+		var more_str = '<div style="float:right;margin-top:10px;"><a href="{0}" target="_blank">更多</a></div><div style="clear:both;"></div>';
 
-				//show default type resource list
-				if( element.cssClass === 'all' ){
-					changeTypeIask('all');
-				}
-			});
-		});
+		var word = $('html head title').html().split('(')[0];
+		var lm = type === undefined ? '' : type.key;//file type
+		urlencode(word,function(word){
+			var search = "http://wenku.baidu.com/search?word={0}&lm={1}&od={2}&pn={3}".format(word,lm,0,0);
 
-
-		//get iask resource list
-		function getIask(key,element,callback){
-			//DOM string
-			var div = $('<div class="douban-book-iask-list {0}" style="display:none;"></div>'.format(element.cssClass));
-			var ul = $('<ul class="bs"></ul>');
-			var li_str = '<li><a href="{0}" target="_blank" title="{1}">{2}</a><span style="float:right;">{3}</span></li>';
-			var more_str = '<div style="float:right;margin-top:10px;"><a href="http://api.iask.sina.com.cn/api/search2.php?key={0}&from=douban&format={1}" target="_blank">更多</a></div><div style="clear:both;"></div>';
-			//urls
-			var search = 'http://api.iask.sina.com.cn/api/isharesearch.php?key={0}&format={1}&start=0&num=5&datatype=json&keycharset=utf8';
-
-			//get book list
 			$.ajax({
-				url : search.format(key,element.value),
+				url : search,
 				success : function(data){
-					data = eval(data);
-					data.sp.result.forEach(function(element,index){
-						//insert resource list
-						var title , desc , url , size;
-						title = element.title;
-						desc = element.desc;
-						url = element.url;
-						size = adaptSize(element.filesize);
-						ul.append( $( li_str.format(url,desc,title,size) ) );
+					var lis = '';
+					$('.search-result dl',data).each(function(index,item){
+						//show desired number of book
+						if( index >= bookseeker.showNum )
+							return;
+						var name = $('dt a',item).text().shortcut();
+						var url = $('dt a',item).attr('href');
+						var desc = $('dd p.summary',item).text();
+						var score = $('dd p.detail span',item).attr('title').match(/\d+/)[0] + '分';
+						var date = $('dt span',item).text();
+						lis += li_str.format(url,desc,name,score,date);
 					});
-					//insert more
-					div.append( ul , $(more_str.format(key,element.value)) );
-					callback( div );
+					ul.append( $(lis) );
+					//insert more link
+					div.append( ul , $(more_str.format(search)) );
 				},
 			});
-		}
+		})
+	}
 
-		//translate byte to appropriote file size
-		function adaptSize(byteSize){
-			var UNITS = ['B','K','M','G','T'];
-			var scale = 0 , result = byteSize , quotient;
-			for( quotient = result/1024 ; quotient >= 1 ; scale++ ){
-				result = quotient;
-				quotient = result/1024;
-			}
-			return parseInt(result) + UNITS[scale];
-		}
+	function changeSite(site){
+		$('li.bookseeker').css({
+			"color" : "black",
+			"background-color" : "transparent",
+			"border" : "none",
+		});
+		$('li.bookseeker.'+site).css({
+			"color" : "white",
+			"background-color" : "#733",
+			"border-left" : "1px solid #F99",
+			"border-top" : "1px solid #F99",
+			"border-right" : "1px solid #F33",
+			"border-bottom" : "1px solid #F33",
+		});
 
-	})();
+		$('div.bookseeker').css('display','none');
+		$('div.bookseeker.'+site).css('display','block');
+	}
+	function changeType(site,type){
+		$('li.bookseeker-'+site).css({
+			"color" : "black",
+			"background-color" : "transparent",
+			"border" : "none",
+		});
+		$('li.bookseeker-'+site+'.'+type).css({
+			"color" : "white",
+			"background-color" : "#733",
+			"border-left" : "1px solid #F99",
+			"border-top" : "1px solid #F99",
+			"border-right" : "1px solid #F33",
+			"border-bottom" : "1px solid #F33",
+		});
+
+		$('div.bookseeker-'+site).css('display','none');
+		$('div.bookseeker-'+site+'.'+type).css('display','block');
+	}
+	contentEval(changeSite);
+	contentEval(changeType);
 
 	//convert UTF8 encoding to GB2312
 	//a bit trick
@@ -280,13 +219,22 @@
 					}
 				});
 				if( result === '' ){
-					alert("由于API更改,utf8到gb2312编码无法正常解析,请联系cattail2012@gmail.com");
+					alert("Due to the baidu API changes,encoding convertion from UTF8 to GB2312 failed,contact cattail2012@gmail.com");
 				}
 				callback(result);
 			},
 		});
 	}
-
+	//translate byte to appropriote file size
+	function calSize(byteSize){
+		var UNITS = ['B','K','M','G','T'];
+		var scale = 0 , result = byteSize , quotient;
+		for( quotient = result/1024 ; quotient >= 1 ; scale++ ){
+			result = quotient;
+			quotient = result/1024;
+		}
+		return parseInt(result) + UNITS[scale];
+	}
 	//add additional javascript source in page
 	function contentEval( source ) {
 		var script = document.createElement('script');
@@ -294,70 +242,5 @@
 		script.textContent = source;
 		document.body.appendChild(script);
 	}
-	function changeSite(site){
-		$('.douban-book-site-type').css({
-			"color" : "black",
-			"background-color" : "transparent",
-			"border" : "none",
-		});
-		$( '.douban-book-site-type.'+site ).css({
-			"color" : "white",
-			"background-color" : "#733",
-			"border-left" : "1px solid #F99",
-			"border-top" : "1px solid #F99",
-			"border-right" : "1px solid #F33",
-			"border-bottom" : "1px solid #F33",
-		});
 
-		$('.douban-book-site').css('display','none');
-		$('.douban-book-site.'+site).css('display','block');
-	}
-	contentEval( changeSite );
-
-	//add type change listener
-	function changeTypeBDWenku(type){
-		//type
-		$('.douban-book-bdwenku-type').css({
-			"color" : "black",
-			"background-color" : "transparent",
-			"border" : "none",
-		});
-		$( '.douban-book-bdwenku-type.'+type ).css({
-			"color" : "white",
-			"background-color" : "#733",
-			"border-left" : "1px solid #F99",
-			"border-top" : "1px solid #F99",
-			"border-right" : "1px solid #F33",
-			"border-bottom" : "1px solid #F33",
-		});
-
-		//resource list
-		$('.douban-book-bdwenku-list').css('display','none');
-		$('.douban-book-bdwenku-list.'+type).css('display','block');
-	}
-	contentEval( changeTypeBDWenku );
-
-	//change type
-	function changeTypeIask(format){
-		$('.douban-book-iask-type').css({
-			"color" : "black",
-			"background-color" : "transparent",
-			"border" : "none",
-		});
-		$( '.douban-book-iask-type.'+format ).css({
-			"color" : "white",
-			"background-color" : "#733",
-			"border-left" : "1px solid #F99",
-			"border-top" : "1px solid #F99",
-			"border-right" : "1px solid #F33",
-			"border-bottom" : "1px solid #F33",
-		});
-
-		//resource list
-		$('.douban-book-iask-list').css("display","none");
-		$( '.douban-book-iask-list.'+format ).css("display","block");
-	}
-
-	contentEval( changeTypeIask );
-	*/
 })(window);
