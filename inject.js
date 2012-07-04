@@ -30,7 +30,7 @@
 		showNum : 5,
 		defaultShow : {
 			site : 'iask',
-			type : 'all',//comresponding to type's css
+			type : 'all',
 		},
 		sites : [
 			{
@@ -99,6 +99,9 @@
 			site.getResource( type,div_type );
 		});
 
+		//show default
+		changeSite(bookseeker.defaultShow.site);
+		changeType(bookseeker.defaultShow.site,bookseeker.defaultShow.type);
 	});
 
 	//get resoure list
