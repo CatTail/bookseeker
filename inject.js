@@ -25,13 +25,16 @@ $(document).ready(function(){
 	var bookseeker;
 	var storage = chrome.storage.local;
 	storage.get(null,function(items){
+		var site_list = [
+		];
+		//===========================
 		defaultSite = items.defaultSite || 'iask';
 		maxNum = items.maxNum || 5;
 
 		var ul_template =  '<ul style="margin-bottom:10px;"></ul>';
 		var li_template =  '<li class="{0}" onclick="change{1}({2})" style="display:inline;margin-right:10px;"><a>{3}</a></li>';
 		bookseeker = {
-			name : '站外图书检索',
+			name : '豆瓣书虫',
 			css : 'bookseeker',
 			ul_template : ul_template,
 			li_template : li_template,
