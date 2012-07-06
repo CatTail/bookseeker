@@ -260,3 +260,4 @@ $(document).ready(function(){
 		document.body.appendChild(script);
 	}
 });
+console.log('test');
