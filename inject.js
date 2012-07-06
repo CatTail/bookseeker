@@ -22,63 +22,59 @@ $(document).ready(function(){
 	}
 
 
-	var bookseeker;
+	var key = $('html head title').html().split('(')[0];
+	var bookseeker = {
+		name : '豆瓣书虫',
+		css : 'bookseeker',
+		ul_template : '<ul style="margin-bottom:10px;"></ul>',
+		li_template : '<li class="{0}" onclick="change{1}({2})" style="display:inline;margin-right:10px;"><a>{3}</a></li>',
+		maxNum : 5,
+		defaultSite : 'iask',
+		sites : [
+			{
+				name : '新浪爱问',
+				css : 'iask',
+				types : [
+					{name:'全部',key:'',css:'all'},
+					{name:'TXT',key:'txt',css:'txt'},
+					{name:'DOC',key:'doc',css:'doc'},
+					{name:'PDF',key:'pdf',css:'pdf'},
+					{name:'PPT',key:'ppt',css:'ppt'},
+					{name:'HTM',key:'htm',css:'htm'},
+					{name:'RAR',key:'rar',css:'rar'},
+					{name:'EXE',key:'exe',css:'exe'},
+				],
+				getResource : getIask,
+			},
+			{
+				name : '百度文库',
+				css : 'wenku',
+				types : [
+					{name:'全部',key:'0',css:'all'},
+					{name:'DOC',key:'1',css:'doc'},
+					{name:'PDF',key:'2',css:'pdf'},
+					{name:'PPT',key:'3',css:'ppt'},
+					{name:'XLS',key:'4',css:'xls'},
+					{name:'TXT',key:'5',css:'txt'},
+				],
+				getResource : getWenku,
+			},
+
+		],
+	};
+
 	var storage = chrome.storage.local;
 	storage.get(null,function(items){
-		var site_list = [
-		];
-		//===========================
-		defaultSite = items.defaultSite || 'iask';
-		maxNum = items.maxNum || 5;
+		bookseeker.defaultSite = items.defaultSite || 'iask';
+		bookseeker.maxNum = items.maxNum || 5;
 
-		var ul_template =  '<ul style="margin-bottom:10px;"></ul>';
-		var li_template =  '<li class="{0}" onclick="change{1}({2})" style="display:inline;margin-right:10px;"><a>{3}</a></li>';
-		bookseeker = {
-			name : '豆瓣书虫',
-			css : 'bookseeker',
-			ul_template : ul_template,
-			li_template : li_template,
-			maxNum : maxNum,
-			defaultSite : defaultSite,
-			sites : [
-				{
-					name : '新浪爱问',
-					css : 'iask',
-					types : [
-						{name:'全部',key:'',css:'all'},
-						{name:'TXT',key:'txt',css:'txt'},
-						{name:'DOC',key:'doc',css:'doc'},
-						{name:'PDF',key:'pdf',css:'pdf'},
-						{name:'PPT',key:'ppt',css:'ppt'},
-						{name:'HTM',key:'htm',css:'htm'},
-						{name:'RAR',key:'rar',css:'rar'},
-						{name:'EXE',key:'exe',css:'exe'},
-					],
-					getResource : getIask,
-				},
-				{
-					name : '百度文库',
-					css : 'wenku',
-					types : [
-						{name:'全部',key:'0',css:'all'},
-						{name:'DOC',key:'1',css:'doc'},
-						{name:'PDF',key:'2',css:'pdf'},
-						{name:'PPT',key:'3',css:'ppt'},
-						{name:'XLS',key:'4',css:'xls'},
-						{name:'TXT',key:'5',css:'txt'},
-					],
-					getResource : getWenku,
-				},
-
-			],
-		};
-
-		initialize();
+		loadDefaultSite();
+		loadSelfSite();
 	});
 
-	function initialize(){
+	function loadDefaultSite(){
 		var css = bookseeker.css;
-		var div = $('<div></div>').addClass('gray_ad').append( $('<h2></h2>').html(bookseeker.name) );
+		var div = $('<div id="bookseeker"></div>').addClass('gray_ad').append( $('<h2></h2>').html(bookseeker.name) );
 		var ul = $(bookseeker.ul_template);
 		$('.aside').prepend( div.append( ul ) );
 
@@ -118,10 +114,56 @@ $(document).ready(function(){
 		});
 	}
 
+	/*
+	*	<div class="bookseeker verycd">
+	*		<ul class="bs">
+	*			<li><a>stuff</a></li>
+	*		</ul>
+	*	</div>
+	*/
+	var site_list = {
+		verycd : {
+			name : '电驴大全verycd',
+			css : 'verycd',
+			search : 'http://www.verycd.com/search/folders/{0}?catalog_id=69',
+			selector : '',
+			li_template : '<li class="" onclick="" style="display:inline;margin-right:10px;"><a>测试</a></li>',
+			generator : function(item,template){
+				return template;
+			},
+		},
+		ikandou : {
+			name : '万卷书',
+			css : 'ikandou',
+			search : 'url',
+			list_reg : new RegExp(),
+			item_regs : [
+				new RegExp(),
+				new RegExp(),
+			],
+		},
+	};
+	function loadSelfSite(sites){
+		var div_template = '<div class="bookseeker {0}"><ul class="bs"><li>{1}</li></ul></div>';
+		sites = ['verycd'];
+		sites.forEach(function(name){
+			var site = site_list[name];
+			$.ajax({
+				url : site.search.format(key),
+				success : function(data){
+					var lis = '';
+					$(site.selector,data).each(function(index,item){
+						lis += site.generator(item,site.li_template);
+					});
+					$('#bookseeker').append( $( div_template.format(site.css,lis) ) );
+				},
+			});
+		});
+	}
+
 	//get resoure list
 	//return 
 	function getIask(type,div){
-		var key = $('html head title').html().split('(')[0];
 		//DOM string
 		var ul = $('<ul class="bs"></ul>');
 		var li_str = '<li><a href="{0}" target="_blank" title="{1}">{2}</a><span style="float:right;">{3}</span></li>';

@@ -15,7 +15,7 @@
       "matches" : [
         "http://book.douban.com/subject/*"
       ],
-      "js" : ["jquery.js","inject.js"],
+      "js" : ["jquery.js","async.js","inject.js"],
       "run_at" : "document_idle",
       "all_frames" : false
     }
